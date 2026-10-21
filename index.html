@@ -76,7 +76,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
   </div>
 </nav>
 
-<!-- 保存悬浮条 -->
 <div id="save-bar" class="hidden fixed bottom-16 left-0 right-0 z-50 px-4">
   <div class="max-w-md mx-auto bg-slate-900 text-white rounded-xl shadow-lg p-3 flex items-center justify-between">
     <span class="text-xs">有未保存的變更</span>
@@ -87,7 +86,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
   </div>
 </div>
 
-<!-- 登录弹窗 -->
 <div id="login-modal" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center px-4">
   <div class="bg-white rounded-xl p-5 w-full max-w-sm shadow-xl">
     <h3 class="font-bold text-lg mb-4">登入編輯</h3>
@@ -104,7 +102,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
 <script>
 const API_BASE = "https://hanoi-trip-api.weiding741-0f0.workers.dev";
 
-/* ================= 默认数据（数据库为空时使用） ================= */
 const defaultItinerary = [
   { day: "DAY 1 · 11/12 (四)", tag: "臺南 ➔ 河內", items: [
     { time: "12:10-14:00", title: "臺南 ➔ 河內", desc: "航班移動", price: "" },
@@ -199,17 +196,16 @@ const defaultMichelin = [
   { name: "Bánh Cuốn Bà Xuân", type: "selected", desc: "米其林入選 · 現做熱騰騰越南腸粉" }
 ];
 
-/* ================= 状态 ================= */
 let itineraryData = JSON.parse(JSON.stringify(defaultItinerary));
 let michelinData = JSON.parse(JSON.stringify(defaultMichelin));
 let currentFilter = "all";
 let editMode = false;
 let dirty = false;
 
-/* ================= 渲染行程 ================= */
 function renderItinerary() {
   const container = document.getElementById("itinerary-list");
   container.innerHTML = "";
+  if (!Array.isArray(itineraryData)) { itineraryData = JSON.parse(JSON.stringify(defaultItinerary)); }
   itineraryData.forEach((day, di) => {
     const card = document.createElement("div");
     card.className = "bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden";
@@ -245,10 +241,10 @@ function renderItinerary() {
   bindEditable();
 }
 
-/* ================= 渲染米其林 ================= */
 function renderMichelin() {
   const container = document.getElementById("michelin-list");
   container.innerHTML = "";
+  if (!Array.isArray(michelinData)) { michelinData = JSON.parse(JSON.stringify(defaultMichelin)); }
   const list = currentFilter === "all" ? michelinData : michelinData.filter(i => i.type === currentFilter);
   list.forEach((item) => {
     const realIndex = michelinData.indexOf(item);
@@ -274,7 +270,6 @@ function renderMichelin() {
   bindEditable();
 }
 
-/* ================= 绑定可编辑事件 ================= */
 function bindEditable() {
   document.querySelectorAll(".editable[contenteditable='true']").forEach(el => {
     el.oninput = () => { markDirty(); syncFromDom(el); };
@@ -295,7 +290,6 @@ function syncFromDom(el) {
   }
 }
 
-/* ================= 编辑操作 ================= */
 function addItineraryItem(di) {
   itineraryData[di].items.push({ time: "00:00-00:00", title: "新行程", desc: "", price: "" });
   markDirty(); renderItinerary();
@@ -329,7 +323,6 @@ function filterMichelin(type, btn) {
   renderMichelin();
 }
 
-/* ================= 登录与保存 ================= */
 function onSettingsClick() {
   if (localStorage.getItem("token")) { toggleEditMode(); return; }
   document.getElementById("login-modal").classList.remove("hidden");
@@ -411,20 +404,31 @@ function cancelEdit() {
   document.getElementById("save-bar").classList.add("hidden");
 }
 
-/* ================= 加载数据 ================= */
 async function loadData() {
   try {
     const [ri, rm] = await Promise.all([
       fetch(`${API_BASE}/api/content/itinerary`).then(r => r.json()),
       fetch(`${API_BASE}/api/content/michelin`).then(r => r.json())
     ]);
-    if (ri.content) { try { itineraryData = JSON.parse(ri.content); } catch {} }
-    if (rm.content) { try { michelinData = JSON.parse(rm.content); } catch {} }
+    if (ri.content) {
+      try {
+        const parsed = JSON.parse(ri.content);
+        if (Array.isArray(parsed)) itineraryData = parsed;
+        else console.warn("itinerary 数据不是数组，使用默认数据");
+      } catch (e) { console.warn("itinerary 解析失败", e); }
+    }
+    if (rm.content) {
+      try {
+        const parsed = JSON.parse(rm.content);
+        if (Array.isArray(parsed)) michelinData = parsed;
+        else console.warn("michelin 数据不是数组，使用默认数据");
+      } catch (e) { console.warn("michelin 解析失败", e); }
+    }
   } catch (e) { console.warn("載入失敗，使用預設資料", e); }
-  renderItinerary(); renderMichelin();
+  renderItinerary();
+  renderMichelin();
 }
 
-/* ================= Tab 切换 ================= */
 function switchTab(tabId, btn) {
   document.querySelectorAll(".tab-content").forEach(s => s.classList.add("hidden"));
   document.getElementById(tabId).classList.remove("hidden");
@@ -433,7 +437,6 @@ function switchTab(tabId, btn) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-/* ================= 初始化 ================= */
 document.addEventListener("DOMContentLoaded", () => {
   updateSettingsIcon();
   const exp = localStorage.getItem("tokenExpires");
