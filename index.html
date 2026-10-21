@@ -14,6 +14,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
 .edit-mode .editable:focus { outline: 2px solid #dc2626; background: #fffbeb; }
 .edit-toolbar { display: none; }
 .edit-mode .edit-toolbar { display: flex; }
+.link-chip { display: inline-flex; align-items: center; gap: 6px; }
 </style>
 </head>
 <body class="text-slate-800">
@@ -102,6 +103,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
 <script>
 const API_BASE = "https://hanoi-trip-api.weiding741-0f0.workers.dev";
 
+/* ============ 默认数据 ============ */
 const defaultItinerary = [
   { day: "DAY 1 · 11/12 (四)", tag: "臺南 ➔ 河內", items: [
     { time: "12:10-14:00", title: "臺南 ➔ 河內", desc: "航班移動", price: "" },
@@ -109,7 +111,7 @@ const defaultItinerary = [
     { time: "16:00-19:00", title: "巴士移動：河內 ➔ 廣寧", desc: "", price: "300K VND" },
     { time: "19:00-20:00", title: "飯店 Check-in 入住", desc: "", price: "" },
     { time: "20:00-00:00", title: "晚餐 ＆ 下龍區夜逛", desc: "", price: "" }
-  ]},
+  ], links: [] },
   { day: "DAY 2 · 11/13 (五)", tag: "下龍灣郵輪半日遊 ➔ 返回河內", items: [
     { time: "08:00-11:00", title: "早餐", desc: "", price: "" },
     { time: "11:00-11:30", title: "碼頭集合準備登船", desc: "", price: "" },
@@ -120,14 +122,44 @@ const defaultItinerary = [
     { time: "16:30-17:30", title: "返回碼頭", desc: "", price: "" },
     { time: "17:30-21:00", title: "巴士移動：廣寧 ➔ 河內", desc: "", price: "300K VND" },
     { time: "21:00-00:00", title: "晚餐 ＆ 自由活動", desc: "", price: "" }
+  ], links: [] },
+  { day: "DAY 3 · 11/14 (六)", tag: "探索河內", items: [], links: [
+    { category: "景點", color: "blue", list: [
+      { name: "鎮國寺", url: "https://maps.app.goo.gl/emrcYkCg2Rzh19F89" },
+      { name: "昇龍皇城遺址", url: "https://maps.app.goo.gl/ZUakbXBssuyCCP8RA" },
+      { name: "越南美術博物館", url: "https://maps.app.goo.gl/Lw38jgPpHzB6PfrA7" },
+      { name: "火車咖啡街", url: "https://maps.app.goo.gl/ZN3F3D1MeADyfzEE7" },
+      { name: "聖若瑟主教座堂", url: "https://maps.app.goo.gl/p6D5xpeaDmSpato57" },
+      { name: "昇龍水上木偶劇院", url: "https://maps.app.goo.gl/8qNCcFpU5e8Dxyc86" },
+      { name: "河內老城區", url: "https://maps.app.goo.gl/FcyfTEs6SPZEMp9F9" },
+      { name: "河內歌劇院", url: "https://maps.app.goo.gl/gSy4sAc1UnLjpAET7" },
+      { name: "胡志明陵寢", url: "https://maps.app.goo.gl/9T4JPoRi8qAEig716" },
+      { name: "文廟－國子監", url: "https://maps.app.goo.gl/isuwuczhr9sk4c8H7" },
+      { name: "日本街 & 韓國街", url: "https://ppt.cc/fsV3wx" }
+    ]},
+    { category: "SPA／Massage", color: "purple", list: [
+      { name: "Mr spa", url: "https://maps.app.goo.gl/WcjTjwzCd4wPZdEw5" },
+      { name: "MOON VIP", url: "https://maps.app.goo.gl/73LwUJ8Jxi3gzzr96" },
+      { name: "J Spa", url: "https://maps.app.goo.gl/a3RS1jpkaeQPzoMg9" },
+      { name: "d salon", url: "https://maps.app.goo.gl/huMHHjn2YwBh9cLL8" },
+      { name: "neko", url: "https://maps.app.goo.gl/1xH8gryXwrdLbtv27" },
+      { name: "Windy", url: "https://maps.app.goo.gl/mfAHLwQwN15Tu18y8" }
+    ]},
+    { category: "Barbershop", color: "pink", list: [
+      { name: "KING LUXURY", url: "https://maps.app.goo.gl/MprsnEmtzP1coAAQ8" },
+      { name: "H barbershop", url: "https://maps.app.goo.gl/Pb7QmQum25juMUf67" }
+    ]},
+    { category: "Bar／Club", color: "amber", list: [
+      { name: "Big Bang Beer Garden", url: "https://maps.app.goo.gl/eGkLBGWhZ24sq9Tc6" },
+      { name: "M.O.A 98", url: "https://maps.app.goo.gl/kUupc6gr1KymiyzP6" }
+    ]}
   ]},
-  { day: "DAY 3 · 11/14 (六)", tag: "探索河內", items: [] },
   { day: "DAY 4 · 11/15 (日)", tag: "河內 ➔ 高雄", items: [
     { time: "07:00-08:00", title: "早餐享用", desc: "", price: "" },
     { time: "08:00-09:00", title: "前往機場 (內排國際機場)", desc: "", price: "" },
     { time: "09:00-11:45", title: "辦理報到 ＆ 機場免稅店 / 候機", desc: "", price: "" },
     { time: "11:45-15:15", title: "河內 ➔ 高雄", desc: "", price: "" }
-  ]}
+  ], links: [] }
 ];
 
 const defaultMichelin = [
@@ -196,55 +228,108 @@ const defaultMichelin = [
   { name: "Bánh Cuốn Bà Xuân", type: "selected", desc: "米其林入選 · 現做熱騰騰越南腸粉" }
 ];
 
+/* ============ 状态 ============ */
 let itineraryData = JSON.parse(JSON.stringify(defaultItinerary));
 let michelinData = JSON.parse(JSON.stringify(defaultMichelin));
 let currentFilter = "all";
 let editMode = false;
 let dirty = false;
 
+/* ============ 工具 ============ */
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function colorClasses(color) {
+  const map = {
+    blue:   { chip: "bg-blue-50 text-blue-800 hover:bg-blue-100", icon: "text-blue-600" },
+    purple: { chip: "bg-purple-50 text-purple-800 hover:bg-purple-100", icon: "text-purple-600" },
+    pink:   { chip: "bg-pink-50 text-pink-800 hover:bg-pink-100", icon: "text-pink-600" },
+    amber:  { chip: "bg-amber-50 text-amber-800 hover:bg-amber-100", icon: "text-amber-600" }
+  };
+  return map[color] || map.blue;
+}
+
+/* ============ 渲染行程 ============ */
 function renderItinerary() {
   const container = document.getElementById("itinerary-list");
   container.innerHTML = "";
-  if (!Array.isArray(itineraryData)) { itineraryData = JSON.parse(JSON.stringify(defaultItinerary)); }
+  if (!Array.isArray(itineraryData)) itineraryData = JSON.parse(JSON.stringify(defaultItinerary));
+
   itineraryData.forEach((day, di) => {
     const card = document.createElement("div");
     card.className = "bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden";
     card.innerHTML = `
       <div class="bg-slate-800 text-white px-4 py-2.5 flex justify-between items-center">
-        <span class="font-bold text-sm editable" contenteditable="${editMode}" data-di="${di}" data-field="day">${day.day}</span>
-        <span class="text-xs bg-slate-700 px-2 py-0.5 rounded editable" contenteditable="${editMode}" data-di="${di}" data-field="tag">${day.tag}</span>
+        <span class="font-bold text-sm editable" contenteditable="${editMode}" data-di="${di}" data-field="day">${escapeHtml(day.day)}</span>
+        <span class="text-xs bg-slate-700 px-2 py-0.5 rounded editable" contenteditable="${editMode}" data-di="${di}" data-field="tag">${escapeHtml(day.tag)}</span>
       </div>
       <div class="p-4 space-y-3" id="day-items-${di}"></div>
       <div class="edit-toolbar px-4 pb-3">
         <button onclick="addItineraryItem(${di})" class="w-full bg-emerald-50 text-emerald-700 py-1.5 rounded-lg text-xs font-medium border border-emerald-200"><i class="fa-solid fa-plus mr-1"></i>新增時段</button>
       </div>
+      <div class="px-4 pb-4 space-y-4" id="day-links-${di}"></div>
+      <div class="edit-toolbar px-4 pb-3">
+        <button onclick="addLinkCategory(${di})" class="w-full bg-blue-50 text-blue-700 py-1.5 rounded-lg text-xs font-medium border border-blue-200"><i class="fa-solid fa-link mr-1"></i>新增連結分類</button>
+      </div>
     `;
     container.appendChild(card);
+
     const itemsContainer = card.querySelector(`#day-items-${di}`);
-    day.items.forEach((item, ii) => {
+    (day.items || []).forEach((item, ii) => {
       const row = document.createElement("div");
       row.className = "flex items-start gap-3 border-b border-slate-100 pb-2 last:border-0 last:pb-0";
       row.innerHTML = `
-        <span class="text-xs font-semibold bg-red-100 text-red-700 px-2 py-1 rounded shrink-0 mt-0.5 editable" contenteditable="${editMode}" data-di="${di}" data-ii="${ii}" data-field="time">${item.time}</span>
+        <span class="text-xs font-semibold bg-red-100 text-red-700 px-2 py-1 rounded shrink-0 mt-0.5 editable" contenteditable="${editMode}" data-di="${di}" data-ii="${ii}" data-field="time">${escapeHtml(item.time)}</span>
         <div class="flex-1">
-          <p class="font-semibold text-sm editable" contenteditable="${editMode}" data-di="${di}" data-ii="${ii}" data-field="title">${item.title}</p>
-          ${item.desc || editMode ? `<p class="text-xs text-slate-500 editable" contenteditable="${editMode}" data-di="${di}" data-ii="${ii}" data-field="desc">${item.desc}</p>` : ""}
+          <p class="font-semibold text-sm editable" contenteditable="${editMode}" data-di="${di}" data-ii="${ii}" data-field="title">${escapeHtml(item.title)}</p>
+          ${item.desc || editMode ? `<p class="text-xs text-slate-500 editable" contenteditable="${editMode}" data-di="${di}" data-ii="${ii}" data-field="desc">${escapeHtml(item.desc)}</p>` : ""}
           <div class="flex items-center justify-between mt-0.5">
-            <span class="text-xs font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded editable ${item.price ? '' : 'hidden'}" contenteditable="${editMode}" data-di="${di}" data-ii="${ii}" data-field="price">${item.price}</span>
+            <span class="text-xs font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded editable ${item.price ? '' : 'hidden'}" contenteditable="${editMode}" data-di="${di}" data-ii="${ii}" data-field="price">${escapeHtml(item.price)}</span>
             <button onclick="removeItineraryItem(${di},${ii})" class="edit-toolbar text-xs text-red-500 ml-auto"><i class="fa-solid fa-trash"></i></button>
           </div>
         </div>
       `;
       itemsContainer.appendChild(row);
     });
+
+    const linksContainer = card.querySelector(`#day-links-${di}`);
+    (day.links || []).forEach((group, gi) => {
+      const groupEl = document.createElement("div");
+      const cc = colorClasses(group.color);
+      groupEl.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-bold text-sm text-slate-800 editable" contenteditable="${editMode}" data-di="${di}" data-gi="${gi}" data-field="category">${escapeHtml(group.category)}</h3>
+          <button onclick="removeLinkCategory(${di},${gi})" class="edit-toolbar text-xs text-red-500"><i class="fa-solid fa-trash"></i></button>
+        </div>
+        <div class="flex flex-wrap gap-2" id="link-list-${di}-${gi}"></div>
+        <div class="edit-toolbar mt-2">
+          <button onclick="addLink(${di},${gi})" class="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded border border-emerald-200"><i class="fa-solid fa-plus mr-1"></i>新增連結</button>
+        </div>
+      `;
+      linksContainer.appendChild(groupEl);
+
+      const chips = groupEl.querySelector(`#link-list-${di}-${gi}`);
+      (group.list || []).forEach((link, li) => {
+        const chip = document.createElement("span");
+        chip.className = `link-chip text-sm px-3 py-1.5 rounded-lg transition ${cc.chip}`;
+        chip.innerHTML = `
+          <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="editable" contenteditable="${editMode}" data-di="${di}" data-gi="${gi}" data-li="${li}" data-field="name">${escapeHtml(link.name)}</a>
+          <i class="fa-solid fa-map-pin ${cc.icon}"></i>
+          <button onclick="removeLink(${di},${gi},${li})" class="edit-toolbar text-xs text-red-500 ml-1"><i class="fa-solid fa-trash"></i></button>
+        `;
+        chips.appendChild(chip);
+      });
+    });
   });
   bindEditable();
 }
 
+/* ============ 渲染米其林 ============ */
 function renderMichelin() {
   const container = document.getElementById("michelin-list");
   container.innerHTML = "";
-  if (!Array.isArray(michelinData)) { michelinData = JSON.parse(JSON.stringify(defaultMichelin)); }
+  if (!Array.isArray(michelinData)) michelinData = JSON.parse(JSON.stringify(defaultMichelin));
+
   const list = currentFilter === "all" ? michelinData : michelinData.filter(i => i.type === currentFilter);
   list.forEach((item) => {
     const realIndex = michelinData.indexOf(item);
@@ -257,8 +342,8 @@ function renderMichelin() {
     card.className = "bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center";
     card.innerHTML = `
       <div class="pr-2 flex-1">
-        <h3 class="font-bold text-sm text-slate-800 editable" contenteditable="${editMode}" data-mi="${realIndex}" data-field="name">${item.name}</h3>
-        <p class="text-xs text-slate-500 mt-0.5 editable" contenteditable="${editMode}" data-mi="${realIndex}" data-field="desc">${item.desc}</p>
+        <h3 class="font-bold text-sm text-slate-800 editable" contenteditable="${editMode}" data-mi="${realIndex}" data-field="name">${escapeHtml(item.name)}</h3>
+        <p class="text-xs text-slate-500 mt-0.5 editable" contenteditable="${editMode}" data-mi="${realIndex}" data-field="desc">${escapeHtml(item.desc)}</p>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <span class="text-[11px] px-2 py-1 rounded-md ${badgeClass}">${badgeText}</span>
@@ -270,6 +355,7 @@ function renderMichelin() {
   bindEditable();
 }
 
+/* ============ 绑定可编辑 ============ */
 function bindEditable() {
   document.querySelectorAll(".editable[contenteditable='true']").forEach(el => {
     el.oninput = () => { markDirty(); syncFromDom(el); };
@@ -277,20 +363,29 @@ function bindEditable() {
 }
 
 function syncFromDom(el) {
-  const field = el.dataset.field;
-  if (el.dataset.di !== undefined) {
-    const di = +el.dataset.di;
-    if (el.dataset.ii !== undefined) {
-      itineraryData[di].items[+el.dataset.ii][field] = el.textContent.trim();
-    } else {
-      itineraryData[di][field] = el.textContent.trim();
-    }
-  } else if (el.dataset.mi !== undefined) {
-    michelinData[+el.dataset.mi][field] = el.textContent.trim();
+  const f = el.dataset.field;
+  const di = el.dataset.di !== undefined ? +el.dataset.di : null;
+  const gi = el.dataset.gi !== undefined ? +el.dataset.gi : null;
+  const li = el.dataset.li !== undefined ? +el.dataset.li : null;
+  const ii = el.dataset.ii !== undefined ? +el.dataset.ii : null;
+  const mi = el.dataset.mi !== undefined ? +el.dataset.mi : null;
+
+  if (di !== null && gi !== null && li !== null) {
+    itineraryData[di].links[gi].list[li][f] = el.textContent.trim();
+  } else if (di !== null && gi !== null) {
+    itineraryData[di].links[gi][f] = el.textContent.trim();
+  } else if (di !== null && ii !== null) {
+    itineraryData[di].items[ii][f] = el.textContent.trim();
+  } else if (di !== null) {
+    itineraryData[di][f] = el.textContent.trim();
+  } else if (mi !== null) {
+    michelinData[mi][f] = el.textContent.trim();
   }
 }
 
+/* ============ 行程操作 ============ */
 function addItineraryItem(di) {
+  if (!itineraryData[di].items) itineraryData[di].items = [];
   itineraryData[di].items.push({ time: "00:00-00:00", title: "新行程", desc: "", price: "" });
   markDirty(); renderItinerary();
 }
@@ -299,6 +394,37 @@ function removeItineraryItem(di, ii) {
   itineraryData[di].items.splice(ii, 1);
   markDirty(); renderItinerary();
 }
+
+/* ============ 連結操作 ============ */
+function addLinkCategory(di) {
+  const cat = prompt("分類名稱（例如：景點、美食）：");
+  if (!cat) return;
+  const color = prompt("顏色（blue / purple / pink / amber）：", "blue");
+  if (!["blue","purple","pink","amber"].includes(color)) return alert("顏色錯誤");
+  if (!itineraryData[di].links) itineraryData[di].links = [];
+  itineraryData[di].links.push({ category: cat, color, list: [] });
+  markDirty(); renderItinerary();
+}
+function removeLinkCategory(di, gi) {
+  if (!confirm("確定刪除整個分類？")) return;
+  itineraryData[di].links.splice(gi, 1);
+  markDirty(); renderItinerary();
+}
+function addLink(di, gi) {
+  const name = prompt("名稱：");
+  if (!name) return;
+  const url = prompt("網址（https://...）：", "https://");
+  if (!url) return;
+  itineraryData[di].links[gi].list.push({ name, url });
+  markDirty(); renderItinerary();
+}
+function removeLink(di, gi, li) {
+  if (!confirm("確定刪除這個連結？")) return;
+  itineraryData[di].links[gi].list.splice(li, 1);
+  markDirty(); renderItinerary();
+}
+
+/* ============ 米其林操作 ============ */
 function addMichelin() {
   const name = prompt("餐廳名稱：");
   if (!name) return;
@@ -323,6 +449,7 @@ function filterMichelin(type, btn) {
   renderMichelin();
 }
 
+/* ============ 登录 ============ */
 function onSettingsClick() {
   if (localStorage.getItem("token")) { toggleEditMode(); return; }
   document.getElementById("login-modal").classList.remove("hidden");
@@ -361,6 +488,8 @@ function toggleEditMode() {
   renderItinerary(); renderMichelin();
   if (!editMode) { dirty = false; document.getElementById("save-bar").classList.add("hidden"); }
 }
+
+/* ============ 保存 ============ */
 function markDirty() {
   if (!editMode) return;
   dirty = true;
@@ -404,6 +533,7 @@ function cancelEdit() {
   document.getElementById("save-bar").classList.add("hidden");
 }
 
+/* ============ 读取 ============ */
 async function loadData() {
   try {
     const [ri, rm] = await Promise.all([
@@ -414,14 +544,12 @@ async function loadData() {
       try {
         const parsed = JSON.parse(ri.content);
         if (Array.isArray(parsed)) itineraryData = parsed;
-        else console.warn("itinerary 数据不是数组，使用默认数据");
       } catch (e) { console.warn("itinerary 解析失败", e); }
     }
     if (rm.content) {
       try {
         const parsed = JSON.parse(rm.content);
         if (Array.isArray(parsed)) michelinData = parsed;
-        else console.warn("michelin 数据不是数组，使用默认数据");
       } catch (e) { console.warn("michelin 解析失败", e); }
     }
   } catch (e) { console.warn("載入失敗，使用預設資料", e); }
@@ -429,6 +557,7 @@ async function loadData() {
   renderMichelin();
 }
 
+/* ============ Tab ============ */
 function switchTab(tabId, btn) {
   document.querySelectorAll(".tab-content").forEach(s => s.classList.add("hidden"));
   document.getElementById(tabId).classList.remove("hidden");
@@ -437,6 +566,7 @@ function switchTab(tabId, btn) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+/* ============ 初始化 ============ */
 document.addEventListener("DOMContentLoaded", () => {
   updateSettingsIcon();
   const exp = localStorage.getItem("tokenExpires");
