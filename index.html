@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>河內旅遊 🇻🇳</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; padding-bottom: 70px; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.edit-mode .editable { outline: 2px dashed #f59e0b; outline-offset: 2px; cursor: text; }
+.edit-mode .editable:focus { outline: 2px solid #dc2626; background: #fffbeb; }
+.edit-toolbar { display: none; }
+.edit-mode .edit-toolbar { display: flex; }
+</style>
+</head>
+<body class="text-slate-800">
+
+<header class="sticky top-0 z-40 bg-red-700 text-white shadow-md">
+  <div class="px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-2">
+      <span class="text-2xl">🇻🇳</span>
+      <div>
+        <h1 class="font-bold text-lg leading-tight">河內之旅 Hanoi Trip</h1>
+        <p class="text-xs text-red-100">11/12 (四) - 11/15 (日)</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="bg-red-800 text-xs px-2.5 py-1 rounded-full font-medium">4 天 3 夜</span>
+      <button onclick="onSettingsClick()" id="settings-btn" class="text-white/80 hover:text-white text-lg" title="設定">
+        <i class="fa-solid fa-gear"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="p-4 max-w-md mx-auto">
+
+  <section id="sec-itinerary" class="tab-content">
+    <h2 class="text-xl font-bold mb-3 text-slate-800 flex items-center gap-2">
+      <i class="fa-solid fa-calendar-days text-red-600"></i>
+      每日行程規劃
+    </h2>
+    <div id="itinerary-list"></div>
+  </section>
+
+  <section id="sec-michelin" class="tab-content hidden">
+    <h2 class="text-xl font-bold mb-3 text-slate-800 flex items-center gap-2">
+      <i class="fa-solid fa-utensils text-red-600"></i>
+      米其林美食指南
+    </h2>
+    <div class="flex gap-2 mb-4 overflow-x-auto hide-scrollbar pb-1">
+      <button onclick="filterMichelin('all', this)" class="mich-btn active bg-red-600 text-white text-xs px-3 py-1.5 rounded-full font-medium shrink-0">全部</button>
+      <button onclick="filterMichelin('star', this)" class="mich-btn bg-white text-slate-600 border border-slate-200 text-xs px-3 py-1.5 rounded-full font-medium shrink-0">⭐ 一星</button>
+      <button onclick="filterMichelin('bib', this)" class="mich-btn bg-white text-slate-600 border border-slate-200 text-xs px-3 py-1.5 rounded-full font-medium shrink-0">🍲 必比登</button>
+      <button onclick="filterMichelin('selected', this)" class="mich-btn bg-white text-slate-600 border border-slate-200 text-xs px-3 py-1.5 rounded-full font-medium shrink-0">🌟 米其林入選</button>
+    </div>
+    <div id="michelin-list" class="space-y-2.5"></div>
+    <div class="edit-toolbar mt-4">
+      <button onclick="addMichelin()" class="w-full bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium"><i class="fa-solid fa-plus mr-1"></i>新增餐廳</button>
+    </div>
+  </section>
+
+</main>
+
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
+  <div class="max-w-md mx-auto flex justify-around py-2">
+    <button onclick="switchTab('sec-itinerary', this)" class="nav-btn active flex flex-col items-center text-red-600">
+      <i class="fa-solid fa-calendar-days text-lg"></i><span class="text-[10px] mt-1 font-medium">行程</span>
+    </button>
+    <button onclick="switchTab('sec-michelin', this)" class="nav-btn flex flex-col items-center text-slate-400">
+      <i class="fa-solid fa-utensils text-lg"></i><span class="text-[10px] mt-1 font-medium">米其林</span>
+    </button>
+  </div>
+</nav>
+
+<!-- 保存悬浮条 -->
+<div id="save-bar" class="hidden fixed bottom-16 left-0 right-0 z-50 px-4">
+  <div class="max-w-md mx-auto bg-slate-900 text-white rounded-xl shadow-lg p-3 flex items-center justify-between">
+    <span class="text-xs">有未保存的變更</span>
+    <div class="flex gap-2">
+      <button onclick="cancelEdit()" class="px-3 py-1.5 rounded-lg text-xs bg-slate-700">取消</button>
+      <button onclick="saveAll()" id="save-btn" class="px-3 py-1.5 rounded-lg text-xs bg-red-600 font-medium">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 登录弹窗 -->
+<div id="login-modal" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center px-4">
+  <div class="bg-white rounded-xl p-5 w-full max-w-sm shadow-xl">
+    <h3 class="font-bold text-lg mb-4">登入編輯</h3>
+    <input id="login-user" type="text" placeholder="使用者名稱" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+    <input id="login-pass" type="password" placeholder="密碼" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-red-500">
+    <div id="login-error" class="text-red-600 text-xs mb-3 hidden"></div>
+    <div class="flex gap-2">
+      <button onclick="closeLogin()" class="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg text-sm font-medium">取消</button>
+      <button onclick="doLogin()" class="flex-1 bg-red-600 text-white py-2 rounded-lg text-sm font-medium">登入</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "https://hanoi-trip-api.weiding741-0f0.workers.dev";
+
+/* ================= 默认数据（数据库为空时使用） ================= */
+const defaultItinerary = [
+  { day: "DAY 1 · 11/12 (四)", tag: "臺南 ➔ 河內", items: [
+    { time: "12:10-14:00", title: "臺南 ➔ 河內", desc: "航班移動", price: "" },
+    { time: "14:00-16:00", title: "入境與交通", desc: "", price: "" },
+    { time: "16:00-19:00", title: "巴士移動：河內 ➔ 廣寧", desc: "", price: "300K VND" },
+    { time: "19:00-20:00", title: "飯店 Check-in 入住", desc: "", price: "" },
+    { time: "20:00-00:00", title: "晚餐 ＆ 下龍區夜逛", desc: "", price: "" }
+  ]},
+  { day: "DAY 2 · 11/13 (五)", tag: "下龍灣郵輪半日遊 ➔ 返回河內", items: [
+    { time: "08:00-11:00", title: "早餐", desc: "", price: "" },
+    { time: "11:00-11:30", title: "碼頭集合準備登船", desc: "", price: "" },
+    { time: "11:30-13:30", title: "午餐享用", desc: "", price: "" },
+    { time: "13:30-14:45", title: "驚訝洞", desc: "", price: "" },
+    { time: "14:45-15:45", title: "盧昂洞穴", desc: "", price: "" },
+    { time: "15:45-16:30", title: "蒂托普島", desc: "", price: "" },
+    { time: "16:30-17:30", title: "返回碼頭", desc: "", price: "" },
+    { time: "17:30-21:00", title: "巴士移動：廣寧 ➔ 河內", desc: "", price: "300K VND" },
+    { time: "21:00-00:00", title: "晚餐 ＆ 自由活動", desc: "", price: "" }
+  ]},
+  { day: "DAY 3 · 11/14 (六)", tag: "探索河內", items: [] },
+  { day: "DAY 4 · 11/15 (日)", tag: "河內 ➔ 高雄", items: [
+    { time: "07:00-08:00", title: "早餐享用", desc: "", price: "" },
+    { time: "08:00-09:00", title: "前往機場 (內排國際機場)", desc: "", price: "" },
+    { time: "09:00-11:45", title: "辦理報到 ＆ 機場免稅店 / 候機", desc: "", price: "" },
+    { time: "11:45-15:15", title: "河內 ➔ 高雄", desc: "", price: "" }
+  ]}
+];
+
+const defaultMichelin = [
+  { name: "Lamai Garden", type: "star", desc: "米其林一星 頂級精緻料理" },
+  { name: "Hibana by Koki", type: "star", desc: "米其林一星 高級鐵板燒 (Capella Hanoi)" },
+  { name: "Tầm Vị", type: "star", desc: "米其林一星 傳統北越家庭風味料理" },
+  { name: "Gia", type: "star", desc: "米其林一星 現代創意越南料理" },
+  { name: "Phở 10 Lý Quốc Sư (Hoan Kiem)", type: "bib", desc: "必比登推介 · 知名牛肉河粉名店" },
+  { name: "Chả Cá Thăng Long", type: "bib", desc: "必比登推介 · 經典鱧魚鍋 (Duy Tan St)" },
+  { name: "Xới Cơm", type: "bib", desc: "必比登推介 · 道地家庭式懷舊料理" },
+  { name: "Mậu Dịch Số 37", type: "bib", desc: "必比登推介 · 復古配給時代特色餐飲" },
+  { name: "Mr Bảy Miền Tây", type: "bib", desc: "必比登推介 · 美味越南煎餅 Bánh Xèo" },
+  { name: "Luk Lak", type: "bib", desc: "必比登推介 · 傳統與現代結合的越菜" },
+  { name: "Habakuk", type: "bib", desc: "必比登推介 · 精緻咖啡與歐式餐酒館" },
+  { name: "Phở Bò Ấu Triệu", type: "bib", desc: "必比登推介 · 大教堂旁高人氣清湯牛肉粉" },
+  { name: "Tuyết Bún Chả 34", type: "bib", desc: "必比登推介 · 烤肉米線名店" },
+  { name: "1946 Cua Bac", type: "bib", desc: "必比登推介 · 經典傳統越式風味" },
+  { name: "Phở Gà Nguyệt", type: "bib", desc: "必比登推介 · 知名雞肉河粉 (夜宵熱門)" },
+  { name: "Hà Thành Mansion", type: "bib", desc: "必比登推介 · 精緻越菜風格" },
+  { name: "Miến Lươn Chân Cầm", type: "bib", desc: "必比登推介 · 鱔魚冬粉 (Hoan Kiem)" },
+  { name: "Ưu Đàm", type: "bib", desc: "必比登推介 · 高品質美學素食料理" },
+  { name: "Phở Gia Truyền (Hoan Kiem)", type: "bib", desc: "必比登推介 · 經典排隊生牛肉河粉" },
+  { name: "The East", type: "bib", desc: "必比登推介 · 道地北越風味料理" },
+  { name: "Bún Chả Chan", type: "bib", desc: "必比登推介 · 鮮嫩炭烤豬肉米線" },
+  { name: "Bun Cha Ta (Nguyen Huu Huan St)", type: "bib", desc: "必比登推介 · 老城區人氣烤肉米線" },
+  { name: "Chào Bạn", type: "bib", desc: "必比登推介 · 現代演繹傳統越式家常菜" },
+  { name: "Miến Lươn Đông Thịnh", type: "bib", desc: "必比登推介 · 傳統特色鱔魚冬粉/湯" },
+  { name: "Phở Bò Lâm", type: "bib", desc: "必比登推介 · 濃郁牛肉河粉" },
+  { name: "Phở Khôi Hói", type: "bib", desc: "必比登推介 · 豐富部位選擇牛肉粉" },
+  { name: "Ngon Garden", type: "selected", desc: "米其林入選 · 花園式多元越南美食" },
+  { name: "Backstage", type: "selected", desc: "米其林入選 · 奢華劇院風精緻餐飲" },
+  { name: "Chả Cá Anh Vũ (Dong Da)", type: "selected", desc: "米其林入選 · 傳統古法鱘魚鍋" },
+  { name: "Cồ Đàm", type: "selected", desc: "米其林入選 · 頂級蔬食素食饗宴" },
+  { name: "Vị An", type: "selected", desc: "米其林入選 · 溫馨精緻越南家常菜" },
+  { name: "El Gaucho (Hoan Kiem)", type: "selected", desc: "米其林入選 · 阿根廷高端牛排館" },
+  { name: "French Grill By Jean-François Nulli", type: "selected", desc: "米其林入選 · 法式奢華美饌" },
+  { name: "Azabu", type: "selected", desc: "米其林入選 · 精緻日式料理" },
+  { name: "Labri", type: "selected", desc: "米其林入選 · 現代法式新派 bistro" },
+  { name: "T.U.N.G dining", type: "selected", desc: "米其林入選 · 先鋒創意 Tasting Menu" },
+  { name: "Tanh Tách", type: "selected", desc: "米其林入選 · 精緻海鮮西餐廳" },
+  { name: "Etēsia", type: "selected", desc: "米其林入選 · 地中海風格無國界料理" },
+  { name: "Senté (Nguyen Quang Bich)", type: "selected", desc: "米其林入選 · 以蓮花為主題的健康創意料理" },
+  { name: "Izakaya by Koki", type: "selected", desc: "米其林入選 · 高級日式居酒屋" },
+  { name: "Maison 1929", type: "selected", desc: "米其林入選 · 復古建築精緻法越料理" },
+  { name: "Hanoi Garden", type: "selected", desc: "米其林入選 · 老字號庭園越式餐廳" },
+  { name: "Vien Dining", type: "selected", desc: "米其林入選 · 現代創作料理" },
+  { name: "Chapter", type: "selected", desc: "米其林入選 · 現代炭烤與創意料理" },
+  { name: "A Bản Mountain Dew", type: "selected", desc: "米其林入選 · 西北山區少數民族特色料理" },
+  { name: "Hemispheres Steak & Seafood", type: "selected", desc: "米其林入選 · 湖景高級牛排海鮮" },
+  { name: "La Badiane", type: "selected", desc: "米其林入選 · 法式庭園餐廳" },
+  { name: "Quán Ăn Ngon (Hoan Kiem)", type: "selected", desc: "米其林入選 · 匯集全越經典小吃" },
+  { name: "Duong's (Ngo Huyen Street)", type: "selected", desc: "米其林入選 · 知名主廚傳統越菜" },
+  { name: "Bếp Prime", type: "selected", desc: "米其林入選 · 精緻質感越菜" },
+  { name: "Cau Go", type: "selected", desc: "米其林入選 · 俯瞰還劍湖奢華景觀餐廳" },
+  { name: "Ốc Vi Saigon", type: "selected", desc: "米其林入選 · 西貢風味炒螺海鮮" },
+  { name: "Highway4 (Hang Tre Street)", type: "selected", desc: "米其林入選 · 特色越南烈酒與下酒菜" },
+  { name: "Le Beaulieu", type: "selected", desc: "米其林入選 · 傳奇百年飯店頂級法餐" },
+  { name: "Ốc Di Tú", type: "selected", desc: "米其林入選 · 人氣各式炒螺海鮮" },
+  { name: "Phở Tiến", type: "selected", desc: "米其林入選 · 道地老字號牛肉河粉" },
+  { name: "Phở Gà Châm (Yen Ninh St)", type: "selected", desc: "米其林入選 · 奢華高單價雞肉河粉" },
+  { name: "Phở Cuốn Chinh Thắng", type: "selected", desc: "米其林入選 · 經典牛肉河粉捲" },
+  { name: "Hiệu Lực Canh Cá Rô Hưng Yên", type: "selected", desc: "米其林入選 · 興安風味鱸魚湯麵" },
+  { name: "Bún Chả Hương Liên", type: "selected", desc: "米其林入選 · 歐巴馬總統加持烤肉米線" },
+  { name: "Bánh Cuốn Bà Hoành", type: "selected", desc: "米其林入選 · 傳統古法腸粉" },
+  { name: "Bún Chả Đắc Kim", type: "selected", desc: "米其林入選 · 杭饅街古早味烤肉米線" },
+  { name: "Bánh Cuốn Bà Xuân", type: "selected", desc: "米其林入選 · 現做熱騰騰越南腸粉" }
+];
+
+/* ================= 状态 ================= */
+let itineraryData = JSON.parse(JSON.stringify(defaultItinerary));
+let michelinData = JSON.parse(JSON.stringify(defaultMichelin));
+let currentFilter = "all";
+let editMode = false;
+let dirty = false;
+
+/* ================= 渲染行程 ================= */
+function renderItinerary() {
+  const container = document.getElementById("itinerary-list");
+  container.innerHTML = "";
+  itineraryData.forEach((day, di) => {
+    const card = document.createElement("div");
+    card.className = "bg-white rounded-xl shadow-sm border border-slate-100 mb-4 overflow-hidden";
+    card.innerHTML = `
+      <div class="bg-slate-800 text-white px-4 py-2.5 flex justify-between items-center">
+        <span class="font-bold text-sm editable" contenteditable="${editMode}" data-di="${di}" data-field="day">${day.day}</span>
+        <span class="text-xs bg-slate-700 px-2 py-0.5 rounded editable" contenteditable="${editMode}" data-di="${di}" data-field="tag">${day.tag}</span>
+      </div>
+      <div class="p-4 space-y-3" id="day-items-${di}"></div>
+      <div class="edit-toolbar px-4 pb-3">
+        <button onclick="addItineraryItem(${di})" class="w-full bg-emerald-50 text-emerald-700 py-1.5 rounded-lg text-xs font-medium border border-emerald-200"><i class="fa-solid fa-plus mr-1"></i>新增時段</button>
+      </div>
+    `;
+    container.appendChild(card);
+    const itemsContainer = card.querySelector(`#day-items-${di}`);
+    day.items.forEach((item, ii) => {
+      const row = document.createElement("div");
+      row.className = "flex items-start gap-3 border-b border-slate-100 pb-2 last:border-0 last:pb-0";
+      row.innerHTML = `
+        <span class="text-xs font-semibold bg-red-100 text-red-700 px-2 py-1 rounded shrink-0 mt-0.5 editable" contenteditable="${editMode}" data-di="${di}" data-ii="${ii}" data-field="time">${item.time}</span>
+        <div class="flex-1">
+          <p class="font-semibold text-sm editable" contenteditable="${editMode}" data-di="${di}" data-ii="${ii}" data-field="title">${item.title}</p>
+          ${item.desc || editMode ? `<p class="text-xs text-slate-500 editable" contenteditable="${editMode}" data-di="${di}" data-ii="${ii}" data-field="desc">${item.desc}</p>` : ""}
+          <div class="flex items-center justify-between mt-0.5">
+            <span class="text-xs font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded editable ${item.price ? '' : 'hidden'}" contenteditable="${editMode}" data-di="${di}" data-ii="${ii}" data-field="price">${item.price}</span>
+            <button onclick="removeItineraryItem(${di},${ii})" class="edit-toolbar text-xs text-red-500 ml-auto"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `;
+      itemsContainer.appendChild(row);
+    });
+  });
+  bindEditable();
+}
+
+/* ================= 渲染米其林 ================= */
+function renderMichelin() {
+  const container = document.getElementById("michelin-list");
+  container.innerHTML = "";
+  const list = currentFilter === "all" ? michelinData : michelinData.filter(i => i.type === currentFilter);
+  list.forEach((item) => {
+    const realIndex = michelinData.indexOf(item);
+    let badgeClass = "bg-slate-100 text-slate-700";
+    let badgeText = "米其林入選";
+    if (item.type === "star") { badgeClass = "bg-amber-100 text-amber-800 font-bold"; badgeText = "⭐ 一星"; }
+    else if (item.type === "bib") { badgeClass = "bg-red-100 text-red-700 font-bold"; badgeText = "🍲 必比登"; }
+
+    const card = document.createElement("div");
+    card.className = "bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center";
+    card.innerHTML = `
+      <div class="pr-2 flex-1">
+        <h3 class="font-bold text-sm text-slate-800 editable" contenteditable="${editMode}" data-mi="${realIndex}" data-field="name">${item.name}</h3>
+        <p class="text-xs text-slate-500 mt-0.5 editable" contenteditable="${editMode}" data-mi="${realIndex}" data-field="desc">${item.desc}</p>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="text-[11px] px-2 py-1 rounded-md ${badgeClass}">${badgeText}</span>
+        <button onclick="removeMichelin(${realIndex})" class="edit-toolbar text-xs text-red-500"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+  bindEditable();
+}
+
+/* ================= 绑定可编辑事件 ================= */
+function bindEditable() {
+  document.querySelectorAll(".editable[contenteditable='true']").forEach(el => {
+    el.oninput = () => { markDirty(); syncFromDom(el); };
+  });
+}
+
+function syncFromDom(el) {
+  const field = el.dataset.field;
+  if (el.dataset.di !== undefined) {
+    const di = +el.dataset.di;
+    if (el.dataset.ii !== undefined) {
+      itineraryData[di].items[+el.dataset.ii][field] = el.textContent.trim();
+    } else {
+      itineraryData[di][field] = el.textContent.trim();
+    }
+  } else if (el.dataset.mi !== undefined) {
+    michelinData[+el.dataset.mi][field] = el.textContent.trim();
+  }
+}
+
+/* ================= 编辑操作 ================= */
+function addItineraryItem(di) {
+  itineraryData[di].items.push({ time: "00:00-00:00", title: "新行程", desc: "", price: "" });
+  markDirty(); renderItinerary();
+}
+function removeItineraryItem(di, ii) {
+  if (!confirm("確定刪除這個時段？")) return;
+  itineraryData[di].items.splice(ii, 1);
+  markDirty(); renderItinerary();
+}
+function addMichelin() {
+  const name = prompt("餐廳名稱：");
+  if (!name) return;
+  const type = prompt("類型（star / bib / selected）：", "selected");
+  if (!["star","bib","selected"].includes(type)) return alert("類型錯誤");
+  michelinData.unshift({ name, type, desc: "米其林入選" });
+  markDirty(); renderMichelin();
+}
+function removeMichelin(i) {
+  if (!confirm(`確定刪除「${michelinData[i].name}」？`)) return;
+  michelinData.splice(i, 1);
+  markDirty(); renderMichelin();
+}
+function filterMichelin(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll(".mich-btn").forEach(b => {
+    b.classList.remove("bg-red-600","text-white","active");
+    b.classList.add("bg-white","text-slate-600");
+  });
+  btn.classList.add("bg-red-600","text-white","active");
+  btn.classList.remove("bg-white","text-slate-600");
+  renderMichelin();
+}
+
+/* ================= 登录与保存 ================= */
+function onSettingsClick() {
+  if (localStorage.getItem("token")) { toggleEditMode(); return; }
+  document.getElementById("login-modal").classList.remove("hidden");
+}
+function closeLogin() {
+  document.getElementById("login-modal").classList.add("hidden");
+  document.getElementById("login-error").classList.add("hidden");
+}
+async function doLogin() {
+  const username = document.getElementById("login-user").value.trim();
+  const password = document.getElementById("login-pass").value;
+  const errEl = document.getElementById("login-error");
+  errEl.classList.add("hidden");
+  if (!username || !password) { errEl.textContent = "請輸入帳密"; errEl.classList.remove("hidden"); return; }
+  try {
+    const res = await fetch(`${API_BASE}/api/login`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "登入失敗");
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("tokenExpires", data.expires);
+    closeLogin(); updateSettingsIcon(); toggleEditMode();
+  } catch (e) { errEl.textContent = e.message; errEl.classList.remove("hidden"); }
+}
+function updateSettingsIcon() {
+  const btn = document.getElementById("settings-btn");
+  const loggedIn = !!localStorage.getItem("token");
+  btn.innerHTML = loggedIn ? '<i class="fa-solid fa-pen-to-square"></i>' : '<i class="fa-solid fa-gear"></i>';
+  btn.title = loggedIn ? "編輯模式" : "設定";
+}
+function toggleEditMode() {
+  editMode = !editMode;
+  document.body.classList.toggle("edit-mode", editMode);
+  renderItinerary(); renderMichelin();
+  if (!editMode) { dirty = false; document.getElementById("save-bar").classList.add("hidden"); }
+}
+function markDirty() {
+  if (!editMode) return;
+  dirty = true;
+  document.getElementById("save-bar").classList.remove("hidden");
+}
+async function saveAll() {
+  const token = localStorage.getItem("token");
+  if (!token) return alert("請先登入");
+  const btn = document.getElementById("save-btn");
+  btn.textContent = "儲存中..."; btn.disabled = true;
+  try {
+    const [r1, r2] = await Promise.all([
+      fetch(`${API_BASE}/api/content/itinerary`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ content: JSON.stringify(itineraryData) })
+      }),
+      fetch(`${API_BASE}/api/content/michelin`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ content: JSON.stringify(michelinData) })
+      })
+    ]);
+    if (!r1.ok || !r2.ok) {
+      const e = await (r1.ok ? r2 : r1).json();
+      throw new Error(e.error || "儲存失敗");
+    }
+    dirty = false;
+    document.getElementById("save-bar").classList.add("hidden");
+    alert("已儲存");
+  } catch (e) {
+    alert("儲存失敗：" + e.message);
+  } finally {
+    btn.textContent = "儲存"; btn.disabled = false;
+  }
+}
+function cancelEdit() {
+  if (!confirm("放棄未儲存的變更？")) return;
+  loadData();
+  dirty = false;
+  document.getElementById("save-bar").classList.add("hidden");
+}
+
+/* ================= 加载数据 ================= */
+async function loadData() {
+  try {
+    const [ri, rm] = await Promise.all([
+      fetch(`${API_BASE}/api/content/itinerary`).then(r => r.json()),
+      fetch(`${API_BASE}/api/content/michelin`).then(r => r.json())
+    ]);
+    if (ri.content) { try { itineraryData = JSON.parse(ri.content); } catch {} }
+    if (rm.content) { try { michelinData = JSON.parse(rm.content); } catch {} }
+  } catch (e) { console.warn("載入失敗，使用預設資料", e); }
+  renderItinerary(); renderMichelin();
+}
+
+/* ================= Tab 切换 ================= */
+function switchTab(tabId, btn) {
+  document.querySelectorAll(".tab-content").forEach(s => s.classList.add("hidden"));
+  document.getElementById(tabId).classList.remove("hidden");
+  document.querySelectorAll(".nav-btn").forEach(b => { b.classList.remove("text-red-600","active"); b.classList.add("text-slate-400"); });
+  btn.classList.add("text-red-600","active"); btn.classList.remove("text-slate-400");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ================= 初始化 ================= */
+document.addEventListener("DOMContentLoaded", () => {
+  updateSettingsIcon();
+  const exp = localStorage.getItem("tokenExpires");
+  if (exp && Date.now() > Number(exp)) {
+    localStorage.removeItem("token"); localStorage.removeItem("tokenExpires");
+    updateSettingsIcon();
+  }
+  loadData();
+});
+</script>
+</body>
+</html>
